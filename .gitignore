@@ -1,0 +1,53 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment folder
+venv/
+env/
+.venv/
+.env/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Data files (you might want to exclude large datasets)
+data/
+*.csv
+*.zip
+*.h5
+*.pt
+*.pth
+
+# Logs and reports
+*.log
+*.out
+*.err
+
+# IDE/editor folders and files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Streamlit cache (optional)
+.streamlit/
+
+# Pytest cache
+.pytest_cache/
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Environment variable files
+.env
+
+# Model checkpoints and weights
+checkpoints/
+models/
