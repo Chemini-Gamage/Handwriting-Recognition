@@ -4,3 +4,9 @@ matplotlib
 opencv-python
 tensorflow
 scikit-learn
+torch
+torchvision
+transformers
+datasets
+Pillow
+matplotlib
