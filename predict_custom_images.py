@@ -10,7 +10,7 @@ model.load_state_dict(torch.load("crnn_iam.pth", map_location="cpu"))
 model.eval()
 
 # Load image
-img_path = "img/image.jpg"
+img_path = "img/image1.jpg"
 image = Image.open(img_path).convert("L")
 image = transform(image).unsqueeze(0)  # [1, 1, 32, 128]
 
