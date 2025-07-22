@@ -1,43 +1,57 @@
 # utils.py
+import string
 import torch
+from torchvision import transforms
 from torch.nn.utils.rnn import pad_sequence
-from torchvision.transforms import functional as TF
-from PIL import Image
+from torch.utils.data import Dataset
+
 import string
 
-# Charset includes lowercase, uppercase, digits, punctuation and space
-charset = string.ascii_letters + string.digits + string.punctuation + " "
-char2idx = {char: idx + 1 for idx, char in enumerate(charset)}  # 0 is reserved for blank
-idx2char = {idx: char for char, idx in char2idx.items()}
+# Define the vocabulary
+VOCAB = string.ascii_letters + string.digits + string.punctuation + " "
 
-def text_to_labels(text):
-    return [char2idx[char] for char in text if char in char2idx]
+# ✅ Unified charset used everywhere
+CHARSET = string.ascii_letters + string.digits + string.punctuation + " "
+NUM_CLASSES = len(CHARSET) + 1  # +1 for CTC blank
 
-def labels_to_text(labels):
-    return ''.join([idx2char[idx] for idx in labels if idx in idx2char])
+# ✅ Common transform for preprocessing
+transform = transforms.Compose([
+    transforms.Grayscale(),
+    transforms.Resize((32, 128)),
+    transforms.ToTensor()
+])
 
-class IAMDataset(torch.utils.data.Dataset):
-    def __init__(self, hf_dataset, transform=None):
-        self.dataset = hf_dataset
+# ✅ Decode tensor to string using CTC rules
+def decode(preds, vocab):
+    chars = []
+    prev = None
+    for p in preds:
+        if p != prev and p != 0:
+            chars.append(vocab[p - 1])  # CTC blank is 0
+        prev = p
+    return ''.join(chars)
+
+# ✅ Custom Dataset class for IAM
+class IAMDataset(Dataset):
+    def __init__(self, hf_dataset, transform):
+        self.data = hf_dataset
         self.transform = transform
+        self.char_to_idx = {ch: i + 1 for i, ch in enumerate(CHARSET)}  # 0 is blank
 
     def __len__(self):
-        return len(self.dataset)
+        return len(self.data)
 
     def __getitem__(self, idx):
-        item = self.dataset[idx]
-        img = item['image']
-        label = item['text']
+        item = self.data[idx]
+        image = self.transform(item['image'])
+        text = item['text']
+        label = torch.tensor([self.char_to_idx[c] for c in text if c in self.char_to_idx], dtype=torch.long)
+        return image, label
 
-        if self.transform:
-            img = self.transform(img)
-
-        label_tensor = torch.tensor(text_to_labels(label), dtype=torch.long)
-        return img, label_tensor, len(label_tensor)
-
+# ✅ Collate function for CTC
 def collate_fn(batch):
-    images, labels, lengths = zip(*batch)
-    images = torch.stack(images)
+    images, labels = zip(*batch)
+    label_lengths = torch.tensor([len(l) for l in labels], dtype=torch.long)
     labels = pad_sequence(labels, batch_first=True, padding_value=0)
-    lengths = torch.tensor(lengths, dtype=torch.long)
-    return images, labels, lengths
+    images = torch.stack(images)
+    return images, labels, label_lengths
