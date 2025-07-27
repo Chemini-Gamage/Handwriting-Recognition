@@ -24,7 +24,7 @@ criterion = nn.CTCLoss(blank=0, zero_infinity=True)
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # Train
-for epoch in range(10):
+for epoch in range(30):
     model.train()
     total_loss = 0
     for images, labels, label_lengths in train_loader:
